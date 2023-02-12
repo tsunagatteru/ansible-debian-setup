@@ -1,0 +1,5 @@
+---
+user_name: 'user'
+host_name: 'host'
+sys_packages: [ 'curl', 'neovim', 'htop', 'wget', 'git', 'man', 'bash-completion', 'pip']
+swap_sieze: 2G

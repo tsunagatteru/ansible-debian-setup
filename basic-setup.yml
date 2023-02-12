@@ -1,0 +1,151 @@
+---
+- hosts: all
+  become: true
+
+  vars_files:
+    - vars.yml
+
+  vars_prompt:
+
+    - name: root_password
+      prompt: Enter new root password
+      private: yes
+      encrypt: sha512_crypt
+      confirm: yes
+      salt_size: 7
+
+    - name: user_password
+      prompt: Enter new user password
+      private: yes
+      encrypt: sha512_crypt
+      confirm: yes
+      salt_size: 7
+
+    - name: ssh_key
+      prompt: Enter filename of public ssh key
+      default: "~/.ssh/id_rsa.pub"
+      private: no
+
+  remote_user: root
+
+  tasks:
+    - name: Install Prerequisites
+      apt: 
+        name:
+          - ufw
+          - aptitude
+          - sudo
+          - locales
+        update_cache: yes 
+        state: latest 
+        force_apt_get: yes
+
+# Sudo Group Setup
+    - name: Make sure we have a 'wheel' group
+      group:
+        name: wheel
+        state: present
+
+    - name: Allow 'wheel' group to have passwordless sudo
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+
+# User + Key Setup
+    - name: Apply root password
+      user:
+        name: root
+        password: "{{ root_password }}"
+
+    - name: Create a new regular user with sudo privileges
+      user:
+        name: "{{ user_name }}"
+        state: present
+        groups: wheel
+        password: "{{ user_password }}"
+        append: true
+        create_home: true
+        shell: /bin/bash
+
+    - name: Set authorized key for remote user
+      authorized_key:
+        user: "{{ user_name }}"
+        state: present
+        key: "{{ lookup('file', ssh_key) }}"
+
+    - name: Set authorized key for root
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', ssh_key) }}"
+
+    - name: Disable password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+
+# Hostname Setup
+    - name: Setup system hostname
+      hostname: 
+        name: "{{ host_name }}"
+        use: debian
+
+    - name: Setup /etc/hosts
+      blockinfile:
+        dest: /etc/hosts
+        create: yes
+        block: |
+          127.0.0.1       localhost
+          192.168.0.1     {{ host_name }}
+
+# Locale Setup
+    - name: Ensure a locale exists
+      locale_gen:
+        name: en_US.UTF-8
+        state: present
+
+# Install Packages
+    - name: Update apt
+      apt: update_cache=yes
+
+    - name: Install required system packages
+      apt: name={{ sys_packages }} state=latest
+
+# UFW Setup
+    - name: UFW - Allow SSH connections
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: UFW - Deny all other incoming traffic by default
+      ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+# Swap set up
+    - name: create the file to be used for swap
+      command: fallocate -l {{ swap_size }} /mnt/swap
+
+    - name: format the file for swap
+      command: mkswap /mnt/swap
+
+    - name: change swap file permissions
+      file: path=/mnt/swap owner=root group=root mode=0600
+
+    - name: add the file to the system as a swap file
+      command: swapon /mnt/swap
+
+    - name: write swap entry in fstab
+      mount: name=none src=/mnt/swap fstype=swap opts=sw passno=0 dump=0 state=present
+
+# Reboot
+    - name: Reboot system
+      reboot:
+        reboot_timeout: 1200
+

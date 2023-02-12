@@ -1,0 +1,31 @@
+#+STARTUP: overview
+#+TITLE: ansible-debian-setup
+#+LANGUAGE: en
+#+OPTIONS: num:nil
+
+
+* Description
+Simple ansible playbook to quickly setup basic debian server from bare-bones vm image.
+* What it does
+- Creates user with sudo privileges
+- Sets up ssh-key only authentication
+- Changes hostname and hosts file
+- Sets en.US.UTF-8 locale
+- Installs configured packages 
+- Simple firewall configuration
+- Creates and mounts swap file
+* Prerequisites
+Debian 11 netinstall vm with:
+- ssh server running on default config
+- only root user
+- python3 installed
+- no swap file or partition
+* Usage
+- Configure vars.yml to your liking
+- Add target hostname to inventory
+- Run following command on target host to install python and clean hosts and authorized_keys files
+  #+BEGIN_SRC bash
+    bash <(curl -s https://raw.githubusercontent.com/tsunagatteru/ansible-debian-setup/master/pre-setup.sh)
+  #+END_SRC
+- Run basic-setup.sh
+- Enter passwords and ssh-key path in prompt
