@@ -1,3 +1,3 @@
 #!/bin/sh
-ansible-playbook -i inventory --ask-pass basis-setup.yml
+ansible-playbook -i inventory --ask-pass basic-setup.yml
 
