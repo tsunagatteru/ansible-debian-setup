@@ -93,7 +93,6 @@
     - name: Setup system hostname
       hostname: 
         name: "{{ host_name }}"
-        use: debian
 
     - name: Setup /etc/hosts
       blockinfile:
@@ -101,7 +100,6 @@
         create: yes
         block: |
           127.0.0.1       localhost
-          192.168.0.1     {{ host_name }}
 
 # Locale Setup
     - name: Ensure a locale exists
