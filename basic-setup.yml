@@ -1,10 +1,11 @@
 ---
 - hosts: all
-  become: true
+  remote_user: root
+  become: yes
 
   vars_prompt:
 
-    - name: hostname
+    - name: host_name
       prompt: Enter machine hostname
       private: no
 
@@ -25,8 +26,6 @@
       default: "~/.ssh/id_rsa.pub"
       private: no
 
-  remote_user: root
-
   tasks:
     - name: Install packages
       apt: 
@@ -41,7 +40,6 @@
           - locales
         update_cache: yes 
         state: latest 
-        force_apt_get: yes
 
     - name: Ensure a locale exists
       locale_gen:
