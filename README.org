@@ -14,8 +14,9 @@ Simple ansible playbook to quickly setup debian server.
 - Creates and mounts swap file
 * Usage
 - Clone this repository
+- Run script
 #+BEGIN_SRC bash
   chmod + basic-setup.sh
   ./basic-setups.sh {{ your_machine }}
 #+END_SRC
-- Enter variasbles in prompts
+- Enter variables in prompts
