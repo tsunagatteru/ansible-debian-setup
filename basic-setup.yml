@@ -11,6 +11,7 @@
     - name: swap_size
       prompt: Enter swap file size (e.g. 4G) or leave as 0 to disable swap
       default: "0"
+      private: no
 
     - name: root_password
       prompt: Enter new root password
